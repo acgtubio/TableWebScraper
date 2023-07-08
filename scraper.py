@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from dotenv import load_dotenv
 import os
 import requests
@@ -27,9 +27,20 @@ def ExtractTableInformation(text, table_id=None):
         rows = table.children
     
     for row in rows:
-        print(row)
+        if isinstance(row, NavigableString):
+            continue
 
-    return (True)
+        row_data = []
+        for cell in row.children:
+            if isinstance(cell, NavigableString):
+                continue
+
+            row_data.append(cell.get_text())
+
+        table_list.append(row_data)
+
+    print(table_list)
+    return (table_list, True)
 
 def ScrapeWebsite(options):
     """
