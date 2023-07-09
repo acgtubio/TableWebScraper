@@ -2,9 +2,12 @@ from bs4 import BeautifulSoup, NavigableString
 from dotenv import load_dotenv
 import os
 import requests
+import csv
 
-def StoreToCsv(filename, content):
-    pass
+def WriteToCsv(filename, content):
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(content)
 
 def ExtractTableInformation(text, table_id=None):
 
@@ -35,11 +38,12 @@ def ExtractTableInformation(text, table_id=None):
             if isinstance(cell, NavigableString):
                 continue
 
-            row_data.append(cell.get_text())
+            row_data.append(cell.get_text().strip())
 
         table_list.append(row_data)
 
-    print(table_list)
+    #print(table_list)
+
     return (table_list, True)
 
 def ScrapeWebsite(options):
@@ -54,18 +58,19 @@ def ScrapeWebsite(options):
     page_num = options.get('page_num')
     pages = options.get('pages')
 
+    final_table = []
+
     if pages:
         page_nums = range(1, 999999)
     else:
         page_nums = range(1, page_num)
 
 
-    page_nums = range(1, 2)
+    #page_nums = range(1, 4)
 
     for page_n in page_nums:
         
         parsed_url = f"{base_url}?{url_pagination}={page_n}"
-        #parsed_url = f"{base_url}?{url_pagination}=500"
         print(parsed_url)
 
         page = requests.get(parsed_url)
@@ -74,8 +79,11 @@ def ScrapeWebsite(options):
 
         if not status:
             break
+        
+        final_table += result
 
-
+    #print(final_table)
+    return final_table
 
 
 if __name__ == "__main__":
@@ -89,8 +97,9 @@ if __name__ == "__main__":
     options = {
         'url': url,
         'url_pagination': 'page',
-        'pages': 0,
+        'pages': 1,
         'page_num': 10
     }
 
-    ScrapeWebsite(options)
+    table = ScrapeWebsite(options)
+    WriteToCsv('output.csv', table)
